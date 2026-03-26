@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Multi-Core CPU Benchmark & Info</title>
@@ -37,7 +37,6 @@ body.dark {
     100% { background-position: 0% 50%; }
 }
 
-/* 🔥 FIX RIPPLE (QUAN TRỌNG) */
 @keyframes rippleEffect {
     from {
         transform: scale(0);
@@ -107,7 +106,6 @@ body.dark #cpuInfo, body.dark #results { background: rgba(40,40,40,0.6); }
 
 #chartContainer { margin-top: 30px; }
 
-/* Progress Bar */
 #progressContainer {
     width: 100%;
     background: rgba(200,200,200,0.3);
@@ -132,7 +130,6 @@ body.dark #cpuInfo, body.dark #results { background: rgba(40,40,40,0.6); }
     box-shadow: 0 0 6px rgba(0,120,255,0.6);
 }
 
-/* 🔥 FIX CHART */
 canvas {
     max-width: 100%;
 }
@@ -144,14 +141,14 @@ canvas {
     <h1>🔥 Multi-Core CPU Benchmark & Info</h1>
 
     <div id="cpuInfo">
-        <b>Thông tin CPU & Hệ thống:</b>
+        <b>CPU & System Information:</b>
         <div id="infoText"></div>
     </div>
 
-    <button onclick="runBenchmark(event)">Bắt đầu Benchmark</button>
+    <button onclick="runBenchmark(event)">Start Benchmark</button>
     <button id="themeToggle">🌙 Dark Mode</button>
 
-    <div id="loading" style="display:none;">⏳ Đang chạy benchmark đa nhân...</div>
+    <div id="loading" style="display:none;">⏳ Running multi-core benchmark...</div>
     <div id="progressContainer" style="display:none;">
         <div id="progressBar">0%</div>
     </div>
@@ -162,8 +159,8 @@ canvas {
 </div>
 
 <script>
-/* DARK MODE */
 const themeBtn = document.getElementById("themeToggle");
+
 function setTheme(dark){
     if(dark){
         document.body.classList.add("dark");
@@ -173,21 +170,20 @@ function setTheme(dark){
         themeBtn.innerText = "🌙 Dark Mode";
     }
 }
+
 setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
 themeBtn.addEventListener("click", ()=>{ setTheme(!document.body.classList.contains("dark")); });
 
-/* CPU INFO */
 const cores = navigator.hardwareConcurrency || 4;
 const userAgent = navigator.userAgent;
 const platform = navigator.platform;
 
 document.getElementById("infoText").innerHTML = `
-Số core/luồng: <b>${cores}</b><br>
+Threads: <b>${cores}</b><br>
 Platform: <b>${platform}</b><br>
 User Agent: <b>${userAgent}</b>
 `;
 
-/* WORKER */
 const workerCode = `
 self.onmessage = function(e){
     const id = e.data.id;
@@ -199,6 +195,7 @@ self.onmessage = function(e){
     self.postMessage({id,score:count});
 };
 `;
+
 const workerBlob = new Blob([workerCode], { type: "application/javascript" });
 const workerURL = URL.createObjectURL(workerBlob);
 
@@ -241,14 +238,13 @@ function runBenchmark(event){
 
             if(finished===cores){
                 loading.style.display="none";
-                results.innerHTML+=`<div class="totalScore">🏆 Tổng điểm CPU: ${totalScore.toLocaleString()}</div>`;
+                results.innerHTML+=`<div class="totalScore">🏆 Total CPU Score: ${totalScore.toLocaleString()}</div>`;
                 drawChart(coreScores,totalScore);
             }
         }
     }
 }
 
-/* RIPPLE */
 function ripple(e){
     const btn = e.currentTarget;
     const circle = document.createElement("span");
@@ -265,7 +261,6 @@ function ripple(e){
     setTimeout(()=>circle.remove(),600);
 }
 
-/* CHART */
 function drawChart(scores,total){
     const ctx=document.getElementById("chart").getContext("2d");
     if(chart) chart.destroy();
@@ -275,7 +270,7 @@ function drawChart(scores,total){
         data:{
             labels:scores.map((_,i)=>`Core ${i+1}`),
             datasets:[{
-                label:'Điểm Core',
+                label:'Core Score',
                 data:scores
             }]
         }
