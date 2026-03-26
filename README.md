@@ -41,7 +41,14 @@ This tool runs parallel tasks across CPU cores to measure performance. Each core
 
 ---
 
-## 📧 Contact
+## ## 📬 Contact
+
+<p align="center">
+  <a href="mailto:baminhnguyendeptrai@gmail.com">
+    <img src="https://img.shields.io/badge/📧%20Email-Contact%20Me-ff4b5c?style=for-the-badge&logo=gmail&logoColor=white">
+  </a>
+</p>
+
 
 Email: [baminhnguyendeptrai@gmail.com](mailto:baminhnguyendeptrai@gmail.com)
 
