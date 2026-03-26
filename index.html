@@ -37,6 +37,18 @@ body.dark {
     100% { background-position: 0% 50%; }
 }
 
+/* 🔥 FIX RIPPLE (QUAN TRỌNG) */
+@keyframes rippleEffect {
+    from {
+        transform: scale(0);
+        opacity: 0.7;
+    }
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
 .container {
     max-width: 900px;
     margin: 40px auto;
@@ -119,6 +131,11 @@ body.dark #cpuInfo, body.dark #results { background: rgba(40,40,40,0.6); }
     font-family: "Segoe UI", sans-serif;
     box-shadow: 0 0 6px rgba(0,120,255,0.6);
 }
+
+/* 🔥 FIX CHART */
+canvas {
+    max-width: 100%;
+}
 </style>
 </head>
 
@@ -145,7 +162,7 @@ body.dark #cpuInfo, body.dark #results { background: rgba(40,40,40,0.6); }
 </div>
 
 <script>
-/* ----------------- DARK MODE ----------------- */
+/* DARK MODE */
 const themeBtn = document.getElementById("themeToggle");
 function setTheme(dark){
     if(dark){
@@ -156,12 +173,10 @@ function setTheme(dark){
         themeBtn.innerText = "🌙 Dark Mode";
     }
 }
-
 setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
-
 themeBtn.addEventListener("click", ()=>{ setTheme(!document.body.classList.contains("dark")); });
 
-/* ----------------- CPU INFO ----------------- */
+/* CPU INFO */
 const cores = navigator.hardwareConcurrency || 4;
 const userAgent = navigator.userAgent;
 const platform = navigator.platform;
@@ -172,7 +187,7 @@ Platform: <b>${platform}</b><br>
 User Agent: <b>${userAgent}</b>
 `;
 
-/* ----------------- WORKER ----------------- */
+/* WORKER */
 const workerCode = `
 self.onmessage = function(e){
     const id = e.data.id;
@@ -233,7 +248,7 @@ function runBenchmark(event){
     }
 }
 
-/* ----------------- RIPPLE BUTTON ----------------- */
+/* RIPPLE */
 function ripple(e){
     const btn = e.currentTarget;
     const circle = document.createElement("span");
@@ -250,45 +265,19 @@ function ripple(e){
     setTimeout(()=>circle.remove(),600);
 }
 
-/* ----------------- CHART.JS ----------------- */
+/* CHART */
 function drawChart(scores,total){
     const ctx=document.getElementById("chart").getContext("2d");
     if(chart) chart.destroy();
 
-    const labels = scores.map((_,i)=>`Core ${i+1}`);
-    const data = {
-        labels: labels,
-        datasets:[
-            {
-                label:'Điểm Core',
-                data:scores,
-                backgroundColor:scores.map(_=>'rgba(0,120,255,0.6)'),
-                borderColor:scores.map(_=>'rgba(0,120,255,1)'),
-                borderWidth:2
-            },
-            {
-                label:'Tổng điểm',
-                data:Array(scores.length).fill(total),
-                type:'line',
-                borderColor:'rgba(255,100,0,0.8)',
-                backgroundColor:'rgba(255,100,0,0.2)',
-                borderWidth:3,
-                fill:true,
-                tension:0.3,
-                pointRadius:5,
-                pointHoverRadius:7
-            }
-        ]
-    };
-
     chart = new Chart(ctx,{
         type:'bar',
-        data:data,
-        options:{
-            responsive:true,
-            plugins:{ legend:{position:'top'}, tooltip:{mode:'index', intersect:false} },
-            scales:{ y:{beginAtZero:true,title:{display:true,text:'Điểm CPU'}}, x:{title:{display:true,text:'Core'}} },
-            animation:{ duration:1000, easing:'easeOutQuart' }
+        data:{
+            labels:scores.map((_,i)=>`Core ${i+1}`),
+            datasets:[{
+                label:'Điểm Core',
+                data:scores
+            }]
         }
     });
 }
