@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Multi-Core CPU Benchmark & Info</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --bg-light: linear-gradient(120deg,#a1c4fd,#c2e9fb,#d4fc79,#96e6a1);
+    --bg-dark: linear-gradient(120deg,#1c1c1c,#2c2c2c,#333,#111);
+    --text-light: #003a75;
+    --text-dark: #f0f0f0;
+    --card-light: rgba(255,255,255,0.25);
+    --card-dark: rgba(30,30,30,0.6);
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: var(--bg-light);
+    background-size: 400% 400%;
+    animation: bgMove 18s ease infinite;
+    color: var(--text-light);
+    transition: background 0.5s, color 0.5s;
+}
+body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+@keyframes bgMove {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: var(--card-light);
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    backdrop-filter: blur(12px);
+    transition: background 0.5s;
+}
+body.dark .container { background: var(--card-dark); }
+
+h1 { text-align: center; margin-bottom: 14px; font-weight: 700; font-size: 28px; }
+
+button, #themeToggle {
+    padding: 12px 20px;
+    background: #0078ff;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-block;
+    margin: 10px 5px;
+    position: relative;
+    overflow: hidden;
+}
+button:hover, #themeToggle:hover { background: #0060d4; }
+
+#cpuInfo, #results {
+    margin-top: 15px;
+    background: rgba(255,255,255,0.35);
+    padding: 15px;
+    border-radius: 10px;
+    transition: background 0.5s;
+}
+body.dark #cpuInfo, body.dark #results { background: rgba(40,40,40,0.6); }
+
+#loading {
+    font-size: 17px;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.totalScore {
+    text-align: center;
+    font-size: 22px;
+    margin-top: 12px;
+    font-weight: bold;
+    animation: glow .8s ease infinite alternate;
+}
+@keyframes glow {
+    from { text-shadow: 0 0 6px #8ecaff, 0 0 16px #a0d6ff; }
+    to   { text-shadow: 0 0 13px #d8ecff, 0 0 28px #ffffff; }
+}
+
+#chartContainer { margin-top: 30px; }
+
+/* Progress Bar */
+#progressContainer {
+    width: 100%;
+    background: rgba(200,200,200,0.3);
+    border-radius: 12px;
+    margin-top: 15px;
+    height: 28px;
+    overflow: hidden;
+    position: relative;
+}
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #0078ff, #00e0ff);
+    border-radius: 12px;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-family: "Segoe UI", sans-serif;
+    box-shadow: 0 0 6px rgba(0,120,255,0.6);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>🔥 Multi-Core CPU Benchmark & Info</h1>
+
+    <div id="cpuInfo">
+        <b>Thông tin CPU & Hệ thống:</b>
+        <div id="infoText"></div>
+    </div>
+
+    <button onclick="runBenchmark(event)">Bắt đầu Benchmark</button>
+    <button id="themeToggle">🌙 Dark Mode</button>
+
+    <div id="loading" style="display:none;">⏳ Đang chạy benchmark đa nhân...</div>
+    <div id="progressContainer" style="display:none;">
+        <div id="progressBar">0%</div>
+    </div>
+    <div id="results"></div>
+    <div id="chartContainer">
+        <canvas id="chart"></canvas>
+    </div>
+</div>
+
+<script>
+/* ----------------- DARK MODE ----------------- */
+const themeBtn = document.getElementById("themeToggle");
+function setTheme(dark){
+    if(dark){
+        document.body.classList.add("dark");
+        themeBtn.innerText = "☀️ Light Mode";
+    }else{
+        document.body.classList.remove("dark");
+        themeBtn.innerText = "🌙 Dark Mode";
+    }
+}
+
+setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+themeBtn.addEventListener("click", ()=>{ setTheme(!document.body.classList.contains("dark")); });
+
+/* ----------------- CPU INFO ----------------- */
+const cores = navigator.hardwareConcurrency || 4;
+const userAgent = navigator.userAgent;
+const platform = navigator.platform;
+
+document.getElementById("infoText").innerHTML = `
+Số core/luồng: <b>${cores}</b><br>
+Platform: <b>${platform}</b><br>
+User Agent: <b>${userAgent}</b>
+`;
+
+/* ----------------- WORKER ----------------- */
+const workerCode = `
+self.onmessage = function(e){
+    const id = e.data.id;
+    const duration = 2000;
+    const start = performance.now();
+    let count=0;
+    function isPrime(n){if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;}
+    while(performance.now()-start<duration){if(isPrime(count)){} count++;}
+    self.postMessage({id,score:count});
+};
+`;
+const workerBlob = new Blob([workerCode], { type: "application/javascript" });
+const workerURL = URL.createObjectURL(workerBlob);
+
+let chart;
+
+function runBenchmark(event){
+    ripple(event);
+    const results = document.getElementById("results");
+    const loading = document.getElementById("loading");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
+
+    results.innerHTML = "";
+    loading.style.display = "block";
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    progressBar.innerText = "0%";
+
+    let finished=0;
+    let totalScore=0;
+    let coreScores=[];
+
+    for(let i=0;i<cores;i++){
+        const worker = new Worker(workerURL);
+        worker.postMessage({id:i});
+        worker.onmessage=function(e){
+            const id=e.data.id;
+            const score=e.data.score;
+            totalScore+=score;
+            finished++;
+            coreScores[id]=score;
+
+            results.innerHTML+=`Core ${id+1}: <b>${score.toLocaleString()}</b><br>`;
+
+            let percent = Math.round((finished/cores)*100);
+            progressBar.style.width = percent + "%";
+            progressBar.innerText = percent + "%";
+
+            worker.terminate();
+
+            if(finished===cores){
+                loading.style.display="none";
+                results.innerHTML+=`<div class="totalScore">🏆 Tổng điểm CPU: ${totalScore.toLocaleString()}</div>`;
+                drawChart(coreScores,totalScore);
+            }
+        }
+    }
+}
+
+/* ----------------- RIPPLE BUTTON ----------------- */
+function ripple(e){
+    const btn = e.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+    circle.style.width = circle.style.height = diameter+"px";
+    circle.style.left = e.clientX - btn.offsetLeft - diameter/2 + "px";
+    circle.style.top = e.clientY - btn.offsetTop - diameter/2 + "px";
+    circle.style.position="absolute";
+    circle.style.borderRadius="50%";
+    circle.style.background="rgba(255,255,255,0.7)";
+    circle.style.transform="scale(0)";
+    circle.style.animation="rippleEffect 0.6s linear";
+    btn.appendChild(circle);
+    setTimeout(()=>circle.remove(),600);
+}
+
+/* ----------------- CHART.JS ----------------- */
+function drawChart(scores,total){
+    const ctx=document.getElementById("chart").getContext("2d");
+    if(chart) chart.destroy();
+
+    const labels = scores.map((_,i)=>`Core ${i+1}`);
+    const data = {
+        labels: labels,
+        datasets:[
+            {
+                label:'Điểm Core',
+                data:scores,
+                backgroundColor:scores.map(_=>'rgba(0,120,255,0.6)'),
+                borderColor:scores.map(_=>'rgba(0,120,255,1)'),
+                borderWidth:2
+            },
+            {
+                label:'Tổng điểm',
+                data:Array(scores.length).fill(total),
+                type:'line',
+                borderColor:'rgba(255,100,0,0.8)',
+                backgroundColor:'rgba(255,100,0,0.2)',
+                borderWidth:3,
+                fill:true,
+                tension:0.3,
+                pointRadius:5,
+                pointHoverRadius:7
+            }
+        ]
+    };
+
+    chart = new Chart(ctx,{
+        type:'bar',
+        data:data,
+        options:{
+            responsive:true,
+            plugins:{ legend:{position:'top'}, tooltip:{mode:'index', intersect:false} },
+            scales:{ y:{beginAtZero:true,title:{display:true,text:'Điểm CPU'}}, x:{title:{display:true,text:'Core'}} },
+            animation:{ duration:1000, easing:'easeOutQuart' }
+        }
+    });
+}
+</script>
+</body>
+</html>
