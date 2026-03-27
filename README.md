@@ -29,14 +29,6 @@
 
 ---
 
-## 📸 Preview
-
-<p align="center">
-  <img src="https://your-image-link.png" width="800">
-</p>
-
----
-
 ## 🚀 Live Demo
 
 👉 https://taolaminhhehe.github.io/Multi-Core-CPU-Benchmark-Info/
