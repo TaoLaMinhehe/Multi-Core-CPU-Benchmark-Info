@@ -31,7 +31,7 @@
 
 ## 🚀 Live Demo
 
-👉 https://taolaminhhehe.github.io/Multi-Core-CPU-Benchmark-Info/
+👉 https://taolaminhehe.github.io/Multi-Core-CPU-Benchmark-Info/
 
 ---
 
