@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://taolaminhhehe.github.io/Multi-Core-CPU-Benchmark-Info/">
+  <a href="https://taolaminhehe.github.io/Multi-Core-CPU-Benchmark-Info/">
     <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Open%20Now-00c853?style=for-the-badge">
   </a>
   <a href="mailto:baminhnguyendeptrai@gmail.com">
